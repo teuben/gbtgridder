@@ -4,8 +4,13 @@ unset PYTHONPATH
 
 fullpath=`readlink -f $0`
 pathdir=`dirname $fullpath`
+myenv=/home/gbt7/pipeline/gridder/bin/activate
 
-source /home/gbt7/pipeline/gridder/bin/activate
+if [ -e $myenv ]; then
+    source $myenv
+else
+    echo Not at GBT, good luck. Hope your environment has been set.
+fi
 
 STAT_FILE="/home/scratch/pipeline/gridder.log"
 if [ -w $STAT_FILE ]; then
