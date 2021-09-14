@@ -36,7 +36,7 @@ import math
 import time
 import warnings
 
-gbtgridderVersion = "0.5"
+gbtgridderVersion = "0.6"
 
 def read_command_line(argv):
     """Read options from the command line."""
@@ -104,12 +104,12 @@ def parse_channels(channelString,verbose=4):
     start = None
     end = None
     if channelString is not None:
-        print "channelString (%s)" % channelString
+        print("channelString (%s)" % channelString)
         # there must be a ":"
         items = channelString.split(":")
         if len(items) != 2:
             if verbose > 1:
-                print "Unexpected channels argument, must contain exactly one ':' - %s" % channelString
+                print("Unexpected channels argument, must contain exactly one ':' - %s" % channelString)
             return (-1,1)
         if len(items[0]) > 0:
             try:
@@ -118,7 +118,7 @@ def parse_channels(channelString,verbose=4):
                 # fixes for start < 0 happen when used
             except(ValueError):
                 if verbose > 1:
-                    print repr(':'.join(items[0])), 'not convertable to integer'
+                    print(repr(':'.join(items[0])), 'not convertable to integer')
                 raise
         if len(items[1]) > 0:
             try:
@@ -126,7 +126,7 @@ def parse_channels(channelString,verbose=4):
                 end = int(items[1])-1
             except(ValueError):
                 if verbose > 1:
-                    print repr(':'.join(items[1])), 'not convertable to integer'
+                    print(repr(':'.join(items[1])), 'not convertable to integer')
                 raise
     return (start,end)
 
@@ -167,7 +167,7 @@ def parse_scans(scanlist):
         try:
             int_item = [int(ii) for ii in item]
         except(ValueError):
-            print repr(':'.join(item)), 'not convertable to integer'
+            print(repr(':'.join(item)), 'not convertable to integer')
             raise
 
         if 1 == len(int_item):
@@ -181,30 +181,30 @@ def parse_scans(scanlist):
             # range
             if int_item[0] <= int_item[1]:
                 if int_item[0] < 0:
-                    print item[0], ',', item[1], 'must start with a '
+                    print(item[0], ',', item[1], 'must start with a ')
                     'non-negative number'
                     return []
 
                 if int_item[0] == int_item[1]:
                     thisrange = [int_item[0]]
                 else:
-                    thisrange = range(int_item[0], int_item[1]+1)
+                    thisrange = list(range(int_item[0], int_item[1]+1))
 
                 for ii in thisrange:
                     oklist.add(ii)
             else:
-                print item[0], ',', item[1], 'needs to be in increasing '
+                print(item[0], ',', item[1], 'needs to be in increasing ')
                 'order'
                 raise
         else:
-            print item, 'has more than 2 values'
+            print(item, 'has more than 2 values')
 
     for exitem in excludelist:
         try:
             oklist.remove(exitem)
         except(KeyError):
             oklist = [str(item) for item in oklist]
-            print 'ERROR: excluded item', exitem, 'does not exist in '
+            print('ERROR: excluded item', exitem, 'does not exist in ')
             'inclusive range'
             raise
 
@@ -245,8 +245,8 @@ def set_output_files(source, frest, args, file_types, verbose=4):
     # always tack on the underscore
     outputNameRoot += "_"
     if verbose > 4:
-        print "outname root : ", outputNameRoot
-        print "     clobber : ", clobber
+        print("outname root : ", outputNameRoot)
+        print("     clobber : ", clobber)
     
     result = {}
     for file_type in file_types:
@@ -254,14 +254,26 @@ def set_output_files(source, frest, args, file_types, verbose=4):
         if os.path.exists(typeName):
             if not clobber:
                 if verbose > 1:
-                    print typeName + " exists, will not overwrite"
+                    print(typeName + " exists, will not overwrite")
                 return {}
             else:
                 os.remove(typeName)
                 if verbose > 3:
-                    print "existing " + typeName + " removed"
+                    print("existing " + typeName + " removed")
         result[file_type] = typeName
     return result
+
+def sanitize(word):
+    """ 20m SDFITS files seem to have the source and observer column to have
+        \x00 in the middle.  This sanitizes them.  Examples:
+
+        'source': 'smith_cloud\x00oud\x000\x0020',
+        'observer': 'intrepid_25295\x00_25296',
+    """
+    iz = word.find('\x00')
+    if iz > 0:
+        return word[:iz]
+    return word
 
 def gbtgridder(args):
     if not args.SDFITSfiles:
@@ -288,7 +300,7 @@ def gbtgridder(args):
     for sdf in sdfitsFiles:
         if not os.path.exists(sdf):
             if verbose > 1:
-                print sdf + ' does not exist'
+                print(sdf + ' does not exist')
             return
 
     # extract everything from the SDFITS files
@@ -322,11 +334,11 @@ def gbtgridder(args):
     outputFiles = {}
 
     if verbose > 3:
-        print "Loading data ... "
+        print("Loading data ... ")
     for thisFile in sdfitsFiles:
         try:
             if verbose > 3:
-                print "   ",thisFile
+                print("   ",thisFile)
             dataRecord = get_data(thisFile,nchan,chanStart,chanStop,average,scanlist,
                                   minTsys,maxTsys,verbose=verbose)
             if dataRecord is None:
@@ -349,6 +361,7 @@ def gbtgridder(args):
                 frest = dataRecord["restfreq"]
                 faxis = dataRecord["freq"]
                 source = dataRecord["source"]
+                source = sanitize(source)
                 dataUnits = dataRecord["units"]
                 calibType = dataRecord["calibtype"]
                 veldef = dataRecord["veldef"]
@@ -359,6 +372,7 @@ def gbtgridder(args):
                 telescop = dataRecord["telescop"]
                 frontend = dataRecord["frontend"]
                 observer = dataRecord["observer"]
+                observer = sanitize(observer)
                 dateObs = dataRecord["date-obs"]
                 uniqueScans = numpy.unique(dataRecord["scans"])
 
@@ -368,7 +382,7 @@ def gbtgridder(args):
                                                verbose=verbose)
                 if len(outputFiles) == 0:
                     if verbose > 1:
-                        print "Unable to write to output files"
+                        print("Unable to write to output files")
                     return
                 
             else:
@@ -382,13 +396,13 @@ def gbtgridder(args):
 
         except(AssertionError):
             if verbose > 1:
-                print "There was an unexpected problem processing %s" % thisFile
+                print("There was an unexpected problem processing %s" % thisFile)
             raise
 
     if xsky is None:
         if verbose > 1:
-            print "No data was found in the input SDFITS files given the data selection options used."
-            print "Can not continue."
+            print("No data was found in the input SDFITS files given the data selection options used.")
+            print("Can not continue.")
         return
 
     if args.restfreq is not None:
@@ -436,14 +450,14 @@ def gbtgridder(args):
                     (radesys is not None and (cubeInfo['radesys'] != radesys)) or \
                     (equinox is not None and (cubeInfo['equinox'] != equinox)):
                 if verbose > 2:
-                    print "Sky coordinates of data are not the same type found in %s" % args.clonecube
-                    print "Will not clone the coordinate information from that cube"
+                    print("Sky coordinates of data are not the same type found in %s" % args.clonecube)
+                    print("Will not clone the coordinate information from that cube")
                     if verbose > 4:
-                        print "xtype : ", cubeInfo["xtype"], coordType[0]
-                        print "ytype : ", cubeInfo["ytype"], coordType[1]
-                        print "proj : ", cubeInfo['proj'], args.proj
-                        print "radesys : ", cubeInfo['radesys'], radesys
-                        print "equinox : ", cubeInfo['equinox'], equinox
+                        print("xtype : ", cubeInfo["xtype"], coordType[0])
+                        print("ytype : ", cubeInfo["ytype"], coordType[1])
+                        print("proj : ", cubeInfo['proj'], args.proj)
+                        print("radesys : ", cubeInfo['radesys'], radesys)
+                        print("equinox : ", cubeInfo['equinox'], equinox)
             else:
                 refXsky = cubeInfo["xref"]
                 refYsky = cubeInfo["yref"]
@@ -468,11 +482,11 @@ def gbtgridder(args):
         # which can not be gridded at all
         if numpy.all(nonZeroXY == False):
             # always print this out, independent of verbosity level
-            print "All antenna pointings are exactly equal to 0.0, can not grid this data"
+            print("All antenna pointings are exactly equal to 0.0, can not grid this data")
             return
 
         if verbose > 3 and numpy.any(nonZeroXY == False):
-            print "%d spectra will be excluded because the antenna pointing is exactly equal to 0.0 on both axes - unlikely to be a valid position" % (nonZeroXY == False).sum()
+            print("%d spectra will be excluded because the antenna pointing is exactly equal to 0.0 on both axes - unlikely to be a valid position" % (nonZeroXY == False).sum())
 
     # need to watch for coordinates near 0/360  OR near +- 180
     # this technique will miss the difficult case of a mixture of +- 180 and 0:360 X coordinates
@@ -604,11 +618,11 @@ def gbtgridder(args):
     gauss_fwhm = (1.5*pix_scale)*2.354/math.sqrt(2.0)
 
     if verbose > 4:
-        print "Data summary ..."
-        print "   scans : ", format_scans(uniqueScans)
-        print "   channels : %d:%d" % (chanStart, chanStop)
+        print("Data summary ...")
+        print("   scans : ", format_scans(uniqueScans))
+        print("   channels : %d:%d" % (chanStart, chanStop))
         if args.mintsys is None and args.maxtsys is None:
-            print "   no tsys selection"
+            print("   no tsys selection")
         else:
             tsysRange = ""
             if args.mintsys is not None:
@@ -616,32 +630,32 @@ def gbtgridder(args):
             tsysRange += ":"
             if args.maxtsys is not None:
                 tsysRange += "%f" % args.maxtsys
-            print "   tsys range : ", tsysRange
-            print "   flagged outside of tsys range : ", ntsysFlagCount
+            print("   tsys range : ", tsysRange)
+            print("   flagged outside of tsys range : ", ntsysFlagCount)
         # number of spectra actually gridded if wt is being used
         if wt is not None:
-            print "   spectra to grid : ", (wt != 0.0).sum()
+            print("   spectra to grid : ", (wt != 0.0).sum())
         else:
-            print "   spectra to grid : ", len(xsky)
-            print "   using equal weights"
+            print("   spectra to grid : ", len(xsky))
+            print("   using equal weights")
 
-        print ""
-        print "Map info ..."
-        print "   beam_fwhm : ", beam_fwhm, "(", beam_fwhm*60.0*60.0, " arcsec)"
-        print "   pix_scale : ", pix_scale, "(", pix_scale*60.0*60.0, " arcsec)"
-        print "  gauss fwhm : ", gauss_fwhm, "(", gauss_fwhm*60.0*60.0, " arcsec)"
-        print "    ref Xsky : ", refXsky
-        print "    ref Ysky : ", refYsky
-        print " center Ysky : ", centerYsky
-        print "       xsize : ", xsize
-        print "       ysize : ", ysize
-        print "    ref Xpix : ", refXpix
-        print "    ref Ypix : ", refYpix
-        print "          f0 : ", faxis[0]
-        print "    delta(f) : ", faxis[1]-faxis[0]
-        print "      nchan  : ", len(faxis)
-        print "      source : ", source
-        print " frest (MHz) : ", frest/1.e6
+        print("")
+        print("Map info ...")
+        print("   beam_fwhm : ", beam_fwhm, "(", beam_fwhm*60.0*60.0, " arcsec)")
+        print("   pix_scale : ", pix_scale, "(", pix_scale*60.0*60.0, " arcsec)")
+        print("  gauss fwhm : ", gauss_fwhm, "(", gauss_fwhm*60.0*60.0, " arcsec)")
+        print("    ref Xsky : ", refXsky)
+        print("    ref Ysky : ", refYsky)
+        print(" center Ysky : ", centerYsky)
+        print("       xsize : ", xsize)
+        print("       ysize : ", ysize)
+        print("    ref Xpix : ", refXpix)
+        print("    ref Ypix : ", refYpix)
+        print("          f0 : ", faxis[0])
+        print("    delta(f) : ", faxis[1]-faxis[0])
+        print("      nchan  : ", len(faxis))
+        print("      source : ", source)
+        print(" frest (MHz) : ", frest/1.e6)
 
     # build the initial header object
     # only enough to build the WCS object from it + BEAM size info
@@ -655,25 +669,25 @@ def gbtgridder(args):
     wcsObj = wcs.WCS(hdr,relax=True)
 
     if verbose > 3:
-        print "Gridding"
+        print("Gridding")
 
     try:
         (cube, weight, beam_fwhm) = grid_otf(data, xsky, ysky, wcsObj, len(faxis), xsize, ysize, pix_scale, weight=wt, beam_fwhm=beam_fwhm, kern=args.kernel, gauss_fwhm=gauss_fwhm, verbose=verbose)
     except MemoryError:
         if verbose > 1:
-            print "Not enough memory to create the image cubes necessary to grid this data"
-            print "   Requested image size : %d x %d x %d " % (xsize, ysize, len(faxis))
-            print "   find a beefier machine, consider restricting the data to fewer channels or using channel averaging"
-            print "   or use AIPS (with idlToSdfits) to grid all of this data"
+            print("Not enough memory to create the image cubes necessary to grid this data")
+            print("   Requested image size : %d x %d x %d " % (xsize, ysize, len(faxis)))
+            print("   find a beefier machine, consider restricting the data to fewer channels or using channel averaging")
+            print("   or use AIPS (with idlToSdfits) to grid all of this data")
         return
 
     if cube is None or weight is None:
         if verbose > 1:
-            print "Problem gridding data"
+            print("Problem gridding data")
         return
 
     if verbose > 3:
-        print "Writing cube"
+        print("Writing cube")
 
     # Add in the degenerate STOKES axis
     cube.shape = (1,)+cube.shape
@@ -722,8 +736,8 @@ def gbtgridder(args):
         # this could possibly be done inside the above with block
         # if the warnings catch was more sophisticated
         if verbose > 2:
-            print "Entire data cube is not-a-number, this may be because a few channels are consistently bad"
-            print "consider restricting the channel range"
+            print("Entire data cube is not-a-number, this may be because a few channels are consistently bad")
+            print("consider restricting the channel range")
         # remove it
         hdr.remove('DATAMAX')
     else:
@@ -770,7 +784,7 @@ def gbtgridder(args):
 
     if not args.noweight:
         if verbose > 3:
-            print "Writing weight cube"
+            print("Writing weight cube")
         wtHdr = hdr.copy()
         wtHdr['BUNIT'] = ('weight','Weight cube')  # change from K -> weight
         wtHdr['DATAMAX'] = numpy.nanmax(weight)
@@ -781,7 +795,7 @@ def gbtgridder(args):
 
     if not args.nocont:
         if verbose > 3:
-            print "Writing 'cont' image"
+            print("Writing 'cont' image")
         # "cont" map, sum along the spectral axis
         # SQUASH does a weighted average
         # As implemented here, this is equivalent if there are equal weights along the spectral axis
@@ -805,7 +819,7 @@ def gbtgridder(args):
 
     if not args.noline:
         if verbose > 3:
-            print "Writing line image"
+            print("Writing line image")
         # "line" map, subtract the along the spectral axis from every plane in the data_cube
         # replace the 0 channel with the avg
         # first, find the average over the baseline region
@@ -835,42 +849,42 @@ if __name__ == '__main__':
     # argument checking - perhaps this should be a separate function
 
     if args.clonecube is not None and not os.path.exists(args.clonecube):
-        print args.clonecube + ' does not exist'
+        print(args.clonecube + ' does not exist')
         sys.exit(-1)
         
     if args.mapcenter is not None and (abs(args.mapcenter[0]) > 360.0 or abs(args.mapcenter[1]) > 90.0):
-        print "mapcenter values are in degrees. |LONG| should be <= 360.0 and |LAT| <= 90.0"
+        print("mapcenter values are in degrees. |LONG| should be <= 360.0 and |LAT| <= 90.0")
         sys.exit(-1)
 
     if args.size is not None and (args.size[0] <= 0 or args.size[1] <= 0):
-        print "X and Y size values must be > 0"
+        print("X and Y size values must be > 0")
         sys.exit(-1)
 
     if args.pixelwidth is not None and args.pixelwidth <= 0:
-        print "pixelwidth must be > 0"
+        print("pixelwidth must be > 0")
         sys.exit(-1)
 
     if args.restfreq is not None and args.restfreq <= 0:
-        print "restfreq must be > 0"
+        print("restfreq must be > 0")
         sys.exit(-1)
 
     if args.mintsys is not None and args.mintsys < 0:
-        print "mintsys must be > 0"
+        print("mintsys must be > 0")
         sys.exit(1)
 
     if args.maxtsys is not None and args.maxtsys < 0:
-        print "maxtsys must be > 0"
+        print("maxtsys must be > 0")
         sys.exit(1)
 
     if args.maxtsys is not None and args.mintsys is not None and args.maxtsys <= args.mintsys:
-        print "maxtsys must be > mintsys"
+        print("maxtsys must be > mintsys")
         sys.exit(1)
 
     try:
         gbtgridder(args)
-    except ValueError, msg:
+    except ValueError as msg:
         if args.verbose > 1:
-            print 'ERROR: ', msg
+            print('ERROR: ', msg)
         sys.exit(-1)
 
 
