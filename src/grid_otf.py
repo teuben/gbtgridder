@@ -69,33 +69,33 @@ def grid_otf(data, xsky, ysky, wcsObj, nchan, xsize, ysize, pix_scale, weight=No
     # it's assumed these are numpy arrays
     if len(data.shape) != 2 or len(xsky.shape) != 1 or len(ysky.shape) != 1:
         if verbose > 1:
-            print "data, sky coordinates have unexpected shapes"
-            print "data : ", data.shape
-            print "xsky : ", xsky.shape
-            print "ysky : ", ysky.shape
+            print("data, sky coordinates have unexpected shapes")
+            print("data : ", data.shape)
+            print("xsky : ", xsky.shape)
+            print("ysky : ", ysky.shape)
         return result
 
     nspec, nchan_data = data.shape
     if nspec == 0 or nchan_data == 0:
         if verbose > 1:
-            print "no data given"
+            print("no data given")
         return result
 
     if nspec != len(xsky) or nspec != len(ysky):
         if verbose > 1:
-            print "Number of sky position values does not match number of spectra in data"
+            print("Number of sky position values does not match number of spectra in data")
         return result
 
     if beam_fwhm is None:
         if 'BMAJ' not in target_hdr:
             if verbose > 1:
-                print "BMAJ must be in target_hdr or supplied as an argument"
+                print("BMAJ must be in target_hdr or supplied as an argument")
             return result
         beam_fwhm = target_hdr['BMAJ']
 
     if kern not in ["gaussbessel","gauss","nearest"]:
         if verbose > 1:
-            print "kern must be one of gaussbessel or gauss"
+            print("kern must be one of gaussbessel or gauss")
         return result
 
     # use the python shape - fastest changing axis is last
@@ -104,7 +104,7 @@ def grid_otf(data, xsky, ysky, wcsObj, nchan, xsize, ysize, pix_scale, weight=No
     # frequency axis should agree with data
     if cubeShape[0] != nchan_data:
         if verbose > 1:
-            print "Frequency axis in target header and spectra length do not match"
+            print("Frequency axis in target header and spectra length do not match")
         return result
 
     # does not yet support per channel weights
@@ -330,7 +330,7 @@ def grid_otf(data, xsky, ysky, wcsObj, nchan, xsize, ysize, pix_scale, weight=No
 
     if verbose > 3:
         # finish the counter so output is back to it's usual place
-        print ''
+        print('')
 
     # set 0.0 to NaN
     data_cube[data_cube==0.0] = float('nan')

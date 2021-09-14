@@ -44,23 +44,23 @@ def get_data(sdfitsFile, nchan, chanStart, chanStop, average, scanlist, mintsys,
     # it is a serious error and so None is the returned result
     if len(thisFits) < 2:
         if verbose > 2:
-            print "%s has no extensions and is not a single dish FITS file, can not continue." % sdfitsFile
+            print("%s has no extensions and is not a single dish FITS file, can not continue." % sdfitsFile)
         return None
 
     if len(thisFits) > 2:
         if verbose > 2:
-            print "%s has more than 1 extension, can not continue." % sdfitsFile
+            print("%s has more than 1 extension, can not continue." % sdfitsFile)
         return None
 
     if thisFits[1].header['extname'] != 'SINGLE DISH':
         if verbose > 2:
-            print "%s is not a single dish FITS file, can not continue." % sdfitsFile
+            print("%s is not a single dish FITS file, can not continue." % sdfitsFile)
         return None
 
     # if there are no rows, just move on
     if thisFits[1].header['NAXIS2'] == 0:
         if verbose > 2:
-            print "Warning: %s has no rows in the SDFITS table.  Skipping." % sdfitsFile
+            print("Warning: %s has no rows in the SDFITS table.  Skipping." % sdfitsFile)
         thisFits.close()
         return result
 
@@ -78,7 +78,7 @@ def get_data(sdfitsFile, nchan, chanStart, chanStop, average, scanlist, mintsys,
     # averaging must be > 0 and <= nchan (equal to nchan may be silly)
     if average is not None and (average < 1 or average > nchan):
         if verbose > 1:
-            print "Error: averaging must be between 1 and the number of channels"
+            print("Error: averaging must be between 1 and the number of channels")
         thisFits.close()
         return result
 
@@ -94,7 +94,7 @@ def get_data(sdfitsFile, nchan, chanStart, chanStop, average, scanlist, mintsys,
         thisTabData = thisTabData[scanMask]
         if len(thisTabData) == 0:
             if verbose > 2:
-                print "Warning: %s has no rows within the list of selected scan numbers.  Skipping." % sdfitsFile
+                print("Warning: %s has no rows within the list of selected scan numbers.  Skipping." % sdfitsFile)
             thisFits.close()
             return result                
 
@@ -112,9 +112,9 @@ def get_data(sdfitsFile, nchan, chanStart, chanStop, average, scanlist, mintsys,
     # watch for ???? issues in [xy]ctype - caused by missing GO FITS file as seen by sdfits
     if result['xctype'] == '????' or result['yctype'] == '????':
         if verbose > 2:
-            print "Warning: first row in %s has unknown sky coordinate type probably due to missing GO fits file" % sdfitsFile
-            print "Warning: assuming J2000 RA/DEC coordinates"
-            print "Warning: the RESTFREQ value and the related ALTRPIX value in the output cubes are probably also wrong."
+            print("Warning: first row in %s has unknown sky coordinate type probably due to missing GO fits file" % sdfitsFile)
+            print("Warning: assuming J2000 RA/DEC coordinates")
+            print("Warning: the RESTFREQ value and the related ALTRPIX value in the output cubes are probably also wrong.")
         result['xctype'] = 'RA'
         result['yctype'] = 'DEC'
         result['radesys'] = 'FK5'
@@ -212,7 +212,7 @@ def get_data(sdfitsFile, nchan, chanStart, chanStop, average, scanlist, mintsys,
         result['specsys'] = specSysDict[dopframe]
     else:
         if verbose > 2:
-            print "WARN: unrecognized frequency reference frame %s ... using OBS" % dopframe
+            print("WARN: unrecognized frequency reference frame %s ... using OBS" % dopframe)
         result['specsys'] = specSysDict['OBS']
 
     # source name of first spectra

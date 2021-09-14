@@ -42,10 +42,10 @@ def boxcar(dataArray, freqAxis, width):
     """
 
     if dataArray.ndim != 2:
-        raise ValueError, "boxcar expected dataArray to have 2 dimensions"
+        raise ValueError("boxcar expected dataArray to have 2 dimensions")
 
     if dataArray.shape[1] < width:
-        raise ValueError, "width must be < number of channels"
+        raise ValueError("width must be < number of channels")
 
     box = numpy.ones(width,'float32') / width
     nspec, nchan = dataArray.shape
