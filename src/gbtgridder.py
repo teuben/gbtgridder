@@ -436,6 +436,8 @@ def gbtgridder(args):
     # telescop diameter, in meters
     if diam < 0 and telescop == 'NRAO20':
         diam = 20.0
+    if diam < 0 and telescop == 'NRAO_GBT':
+        diam = 100.0
     # since it's called GBTgridder, use 100m for the diameter of the dish if it had not been set
     if diam < 0:
         diam = 100.0
