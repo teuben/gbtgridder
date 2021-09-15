@@ -68,6 +68,7 @@ def read_command_line(argv):
                         help="Map center in longitude and latitude of coordinate type used in data (RA/DEC, Galactic, etc) (degrees)")
     parser.add_argument('--size', metavar=('X','Y'), type=int, nargs=2,
                         help="Image X,Y size (pixels)")
+    parser.add_argument('--dish', type=float, help="Effective dish size (m)")    
     parser.add_argument('--pixelwidth', type=float, help="Image pixel width on sky (arcsec)")
     parser.add_argument('--restfreq', type=float, help="Rest frequency (MHz)")
     parser.add_argument("-p","--proj", type=str, default="SFL", choices=["SFL","TAN"],
@@ -303,6 +304,12 @@ def gbtgridder(args):
                 print(sdf + ' does not exist')
             return
 
+    diam = args.dish
+    if diam is not None:
+        diam = float(diam)
+    else:
+        diam = -1
+
     # extract everything from the SDFITS files
     # this needs in the long run so that only one SDFITS file is opened at a time
     # and a reasonable amount of data are read and then gridded - repeat until done
@@ -427,7 +434,12 @@ def gbtgridder(args):
     # beam_fwhm = (747.6+763.8)/2.0/numpy.median(faxis/1.e9)/3600.
     # This is what idlToSdfits does (next 2 lines of code)
     # telescop diameter, in meters
-    diam = 100.0
+    if diam < 0 and telescop == 'NRAO20':
+        diam = 20.0
+    # since it's called GBTgridder, use 100m for the diameter of the dish if it had not been set
+    if diam < 0:
+        diam = 100.0
+    print("New feature: determined --dish ",diam," as dish diameter")
     beam_fwhm = 1.2 * constants.c * (180.0/constants.pi) / (diam * numpy.median(faxis))
     # the 747.6 and 763.8 values above are equivalent to diam of 99.3 and 97.2 m in this equation, respectively
 
