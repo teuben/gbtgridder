@@ -8,11 +8,15 @@ myenv=/home/gbt7/pipeline/gridder/bin/activate
 
 if [ -e $myenv ]; then
     source $myenv
+    STAT_FILE="/home/scratch/pipeline/gridder.log"
 else
+    STAT_FILE="/tmp/gbtgridder.log"
+    touch $STAT_FILE
+    chmod 666 $STAT_FILE
     echo Not at GBT, good luck. Hope your environment has been set.
 fi
 
-STAT_FILE="/home/scratch/pipeline/gridder.log"
+
 if [ -w $STAT_FILE ]; then
     export LC_TIME="en_US.UTF-8"; echo `whoami`,`date`,`uname -n`,`pwd`,$fullpath $* >> $STAT_FILE
 fi
