@@ -434,10 +434,13 @@ def gbtgridder(args):
     # beam_fwhm = (747.6+763.8)/2.0/numpy.median(faxis/1.e9)/3600.
     # This is what idlToSdfits does (next 2 lines of code)
     # telescop diameter, in meters
-    if diam < 0 and telescop == 'NRAO20':
-        diam = 20.0
-    if diam < 0 and telescop == 'NRAO_GBT':
-        diam = 100.0
+    if diam < 0:
+        if telescop == 'NRAO20':
+            diam = 20.0
+        elif telescop == 'LMT':
+            diam = 50.0
+        elif telescop == 'NRAO_GBT':
+            diam = 100.0
     # since it's called GBTgridder, use 100m for the diameter of the dish if it had not been set
     if diam < 0:
         diam = 100.0
