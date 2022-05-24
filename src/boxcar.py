@@ -49,7 +49,7 @@ def boxcar(dataArray, freqAxis, width):
 
     box = numpy.ones(width,'float32') / width
     nspec, nchan = dataArray.shape
-    nout = nchan/width
+    nout = nchan//width
     # we always loose the channel on the end, no matter what
     if width*nout == nchan:
         nout -= 1
