@@ -13,9 +13,9 @@ else
     STAT_FILE="/tmp/gbtgridder.log"
     touch $STAT_FILE
     chmod 666 $STAT_FILE
-    echo Not at GBT, good luck. Hope your environment has been set.
+    echo Not at GBT, good luck. Hope your python environment has been set.
 fi
-
+echo See $STAT_FILE for messages
 
 if [ -w $STAT_FILE ]; then
     export LC_TIME="en_US.UTF-8"; echo `whoami`,`date`,`uname -n`,`pwd`,$fullpath $* >> $STAT_FILE
